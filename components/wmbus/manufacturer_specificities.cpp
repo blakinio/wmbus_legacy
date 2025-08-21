@@ -159,7 +159,30 @@ void transformDiehlAddress(vector<uchar>& frame, DiehlAddressTransformMethod tra
     }
     else if (transform_method == DiehlAddressTransformMethod::SAP_PRIOS_STANDARD)
     {
-        warning("(diehl) Pre-processing: SAP PRIOS STANDARD transformation not implemented!"); // TODO
+        // SAP PRIOS "standard" frames encode the address with the
+        // version/type first and without providing the device type.
+        // To make the address compliant with the M-Bus standard we
+        // need to swap the fields and force the device type to water
+        // meter (type 0x07, version 0x00).
+        debug("(diehl) Pre-processing: swapping address field and setting device type to water meter for SAP PRIOS STANDARD");
+
+        // Keep a copy of the original address for debugging
+        vector<uchar> original(frame.begin() + 4, frame.begin() + 10);
+
+        // First swap version/type with the serial number (same as in
+        // the generic PRIOS transformation)
+        for (int i = 4; i < 8; ++i)
+        {
+            frame[i] = frame[i + 2];
+        }
+
+        // Force version and type values missing from the telegram
+        frame[8] = 0x00; // version is not transmitted
+        frame[9] = 0x07; // water meter
+
+        debug("(diehl) Address before: %s after: %s",
+              bin2hex(original).c_str(),
+              bin2hex(vector<uchar>(frame.begin() + 4, frame.begin() + 10)).c_str());
     }
 }
 

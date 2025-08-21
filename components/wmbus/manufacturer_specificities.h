@@ -62,7 +62,7 @@ enum class DiehlAddressTransformMethod {
     NONE,              // "A field" coded as per standard
     SWAPPING,          // "A field" coded as version/type/serialnumber instead of standard serialnumber/version/type
     SAP_PRIOS,         // Version and type not included in telegram. Must be hardcoded to 0 and 7
-    SAP_PRIOS_STANDARD // ?
+    SAP_PRIOS_STANDARD // Version/type first and missing; swap and force water meter
 };
 
 const char* toString(DiehlAddressTransformMethod m);
