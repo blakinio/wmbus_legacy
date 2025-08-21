@@ -355,17 +355,15 @@ float EthernetComponent::get_setup_priority() const { return setup_priority::WIF
 
 bool EthernetComponent::can_proceed() { return this->is_connected(); }
 
-network::IPAddresses EthernetComponent::get_ip_addresses() {
+optional<network::IPAddresses> EthernetComponent::get_ip_addresses() {
   network::IPAddresses addresses;
   esp_netif_ip_info_t ip;
   esp_err_t err = esp_netif_get_ip_info(this->eth_netif_, &ip);
   if (err != ESP_OK) {
     ESP_LOGV(TAG, "esp_netif_get_ip_info failed: %s", esp_err_to_name(err));
-    // TODO: do something smarter
-    // return false;
-  } else {
-    addresses[0] = network::IPAddress(&ip.ip);
+    return {};
   }
+  addresses[0] = network::IPAddress(&ip.ip);
 #if USE_NETWORK_IPV6
   struct esp_ip6_addr if_ip6s[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
   uint8_t count = 0;

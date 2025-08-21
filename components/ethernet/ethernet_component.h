@@ -81,7 +81,12 @@ class EthernetComponent : public Component {
   void set_type(EthernetType type);
   void set_manual_ip(const ManualIP &manual_ip);
 
-  network::IPAddresses get_ip_addresses();
+  /// Retrieve IPv4/IPv6 addresses currently assigned to the interface.
+  ///
+  /// @return A list of IP addresses or `nullopt` if the information could not
+  ///     be obtained. Callers should check the returned optional before using
+  ///     the addresses.
+  optional<network::IPAddresses> get_ip_addresses();
   network::IPAddress get_dns_address(uint8_t num);
   std::string get_use_address() const;
   void set_use_address(const std::string &use_address);
