@@ -118,3 +118,15 @@ You can also enable and use MQTT auto discovery feature (very limited).
 ![](https://github.com/SzczepanLeon/esphome-components/blob/main/docs/mqtt_discovery.png)
 
 And check discovered metters in MQTT integration.
+
+## Date/time flag decoding
+
+Some meters encode additional calendar details in the 6-byte date/time value. After the seconds byte the remaining bits and a trailing byte carry:
+
+- bits 5..7 of the hour byte: day of week (0 = Sunday)
+- last byte: ISO week number (1–53)
+- bits 6..7 of the seconds byte: DST offset (00 = 0, 01 = +60 min, 10 = –60 min)
+- bit 6 of the minute byte: leap-year flag
+
+These assumptions are reflected in the parser and exposed via optional outputs on
+`DVEntry::extractDate`.

@@ -593,7 +593,13 @@ struct DVEntry
 
     bool extractDouble(double* out, bool auto_scale, bool force_unsigned);
     bool extractLong(uint64_t* out);
-    bool extractDate(struct tm* out);
+    // Extracts date/time information from this entry. Optionally also returns
+    // week number, daylight saving offset in minutes and leap year flag when
+    // the underlying data provides these fields.
+    bool extractDate(struct tm* out,
+        int* week_number = nullptr,
+        int* dst_offset_minutes = nullptr,
+        bool* leap_year = nullptr);
     bool extractReadableString(std::string* out);
     void addFieldInfo(FieldInfo* fi) { field_infos_.insert(fi); }
     bool hasFieldInfo(FieldInfo* fi) { return field_infos_.count(fi) > 0; }
