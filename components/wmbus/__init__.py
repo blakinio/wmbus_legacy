@@ -1,7 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
-from esphome.log import AnsiFore, color
 from esphome.components import time
 from esphome.components import mqtt
 from esphome.components import wifi
@@ -105,49 +104,58 @@ WMBUS_MQTT_SCHEMA = cv.Schema({
     cv.Optional(CONF_RETAIN,  default=False): cv.boolean,
 })
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(CONF_INFO_COMP_ID):                  cv.declare_id(InfoComponent),
-    cv.GenerateID():                                   cv.declare_id(WMBusComponent),
-    cv.OnlyWith(CONF_MQTT_ID, "mqtt"):                 cv.use_id(mqtt.MQTTClientComponent),
-    cv.OnlyWith(CONF_TIME_ID, "time"):                 cv.use_id(time.RealTimeClock),
-    cv.OnlyWith(CONF_WIFI_REF, "wifi"):                cv.use_id(wifi.WiFiComponent),
-    cv.OnlyWith(CONF_ETH_REF, "ethernet"):             cv.use_id(ethernet.EthernetComponent),
-    cv.Optional(CONF_MQTT_ID):               cv.All(
-        cv.requires_component("mqtt"),
-        cv.use_id(mqtt.MQTTClientComponent),
-    ),
-    cv.Optional(CONF_TIME_ID):               cv.All(
-        cv.requires_component("time"),
-        cv.use_id(time.RealTimeClock),
-    ),
-    cv.Optional(CONF_WIFI_REF):              cv.All(
-        cv.requires_component("wifi"),
-        cv.use_id(wifi.WiFiComponent),
-    ),
-    cv.Optional(CONF_ETH_REF):               cv.All(
-        cv.requires_component("ethernet"),
-        cv.use_id(ethernet.EthernetComponent),
-    ),
-    cv.Optional(CONF_MOSI_PIN,       default=13):      pins.internal_gpio_output_pin_schema,
-    cv.Optional(CONF_MISO_PIN,       default=12):      pins.internal_gpio_input_pin_schema,
-    cv.Optional(CONF_CLK_PIN,        default=14):      pins.internal_gpio_output_pin_schema,
-    # Use a non-bootstrapping pin by default for CS to avoid startup issues.
-    cv.Optional(CONF_CS_PIN,         default=18):      pins.internal_gpio_output_pin_schema,
-    cv.Optional(CONF_GDO0_PIN,       default=5):       pins.internal_gpio_input_pin_schema,
-    cv.Optional(CONF_GDO2_PIN,       default=4):       pins.internal_gpio_input_pin_schema,
-    cv.Optional(CONF_LED_PIN):                         pins.gpio_output_pin_schema,
-    cv.Optional(CONF_LED_BLINK_TIME, default="200ms"): cv.positive_time_period,
-    cv.Optional(CONF_LOG_ALL,        default=False):   cv.boolean,
-    cv.Optional(CONF_ALL_DRIVERS,    default=False):   cv.boolean,
-    cv.Optional(CONF_CLIENTS):                         cv.ensure_list(CLIENT_SCHEMA),
-    cv.Optional(CONF_FREQUENCY,      default=868.950): cv.float_range(min=300, max=928),
-    cv.Optional(CONF_SYNC_MODE,      default=False):   cv.boolean,
-    cv.Optional(CONF_MQTT):                            cv.ensure_schema(WMBUS_MQTT_SCHEMA),
-    cv.Optional(CONF_WMBUS_MQTT_RAW, default=False): cv.boolean,
-    cv.Optional(CONF_WMBUS_MQTT_RAW_PREFIX, default=""): cv.string,
-    cv.Optional(CONF_WMBUS_MQTT_RAW_FORMAT, default="JSON"): cv.templatable(validate_raw_format),
-    cv.Optional(CONF_WMBUS_MQTT_RAW_PARSED, default=True): cv.boolean,
-})
+
+def validate_mqtt(config):
+    if config.get(CONF_MQTT_ID) and config.get(CONF_MQTT):
+        raise cv.Invalid("Only one MQTT configuration is allowed")
+    return config
+
+CONFIG_SCHEMA = cv.All(
+    cv.Schema({
+        cv.GenerateID(CONF_INFO_COMP_ID):                  cv.declare_id(InfoComponent),
+        cv.GenerateID():                                   cv.declare_id(WMBusComponent),
+        cv.OnlyWith(CONF_MQTT_ID, "mqtt"):                 cv.use_id(mqtt.MQTTClientComponent),
+        cv.OnlyWith(CONF_TIME_ID, "time"):                 cv.use_id(time.RealTimeClock),
+        cv.OnlyWith(CONF_WIFI_REF, "wifi"):                cv.use_id(wifi.WiFiComponent),
+        cv.OnlyWith(CONF_ETH_REF, "ethernet"):             cv.use_id(ethernet.EthernetComponent),
+        cv.Optional(CONF_MQTT_ID):               cv.All(
+            cv.requires_component("mqtt"),
+            cv.use_id(mqtt.MQTTClientComponent),
+        ),
+        cv.Optional(CONF_TIME_ID):               cv.All(
+            cv.requires_component("time"),
+            cv.use_id(time.RealTimeClock),
+        ),
+        cv.Optional(CONF_WIFI_REF):              cv.All(
+            cv.requires_component("wifi"),
+            cv.use_id(wifi.WiFiComponent),
+        ),
+        cv.Optional(CONF_ETH_REF):               cv.All(
+            cv.requires_component("ethernet"),
+            cv.use_id(ethernet.EthernetComponent),
+        ),
+        cv.Optional(CONF_MOSI_PIN,       default=13):      pins.internal_gpio_output_pin_schema,
+        cv.Optional(CONF_MISO_PIN,       default=12):      pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_CLK_PIN,        default=14):      pins.internal_gpio_output_pin_schema,
+        # Use a non-bootstrapping pin by default for CS to avoid startup issues.
+        cv.Optional(CONF_CS_PIN,         default=18):      pins.internal_gpio_output_pin_schema,
+        cv.Optional(CONF_GDO0_PIN,       default=5):       pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_GDO2_PIN,       default=4):       pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_LED_PIN):                         pins.gpio_output_pin_schema,
+        cv.Optional(CONF_LED_BLINK_TIME, default="200ms"): cv.positive_time_period,
+        cv.Optional(CONF_LOG_ALL,        default=False):   cv.boolean,
+        cv.Optional(CONF_ALL_DRIVERS,    default=False):   cv.boolean,
+        cv.Optional(CONF_CLIENTS):                         cv.ensure_list(CLIENT_SCHEMA),
+        cv.Optional(CONF_FREQUENCY,      default=868.950): cv.float_range(min=300, max=928),
+        cv.Optional(CONF_SYNC_MODE,      default=False):   cv.boolean,
+        cv.Optional(CONF_MQTT):                            cv.ensure_schema(WMBUS_MQTT_SCHEMA),
+        cv.Optional(CONF_WMBUS_MQTT_RAW, default=False): cv.boolean,
+        cv.Optional(CONF_WMBUS_MQTT_RAW_PREFIX, default=""): cv.string,
+        cv.Optional(CONF_WMBUS_MQTT_RAW_FORMAT, default="JSON"): cv.templatable(validate_raw_format),
+        cv.Optional(CONF_WMBUS_MQTT_RAW_PARSED, default=True): cv.boolean,
+    }),
+    validate_mqtt,
+)
 
 def safe_ip(ip):
     if ip is None:
@@ -157,10 +165,6 @@ def safe_ip(ip):
 async def to_code(config):
     var_adv = cg.new_Pvariable(config[CONF_INFO_COMP_ID])
     await cg.register_component(var_adv, {})
-
-    if (config.get(CONF_MQTT_ID) and config.get(CONF_MQTT)):
-        print(color(AnsiFore.RED, "Only one MQTT can be configured!"))
-        exit()
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
