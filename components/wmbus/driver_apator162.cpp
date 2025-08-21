@@ -72,6 +72,21 @@ namespace
         vector<uchar> content;
         t->extractPayload(&content);
 
+        vector<uchar> aes_key = meterKeys()->confidentiality_key;
+        if (aes_key.size() != 16)
+        {
+            warning("(apator162) invalid or missing AES key, expected 16 bytes");
+            t->decryption_failed = true;
+            return;
+        }
+
+        if (t->decryption_failed)
+        {
+            error("(apator162) failed to decrypt telegram");
+            t->discard = true;
+            return;
+        }
+
         map<string,pair<int,DVEntry>> vendor_values;
 
         // The first 8 bytes are error flags and a date time.
