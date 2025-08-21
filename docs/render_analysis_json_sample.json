@@ -1,0 +1,4 @@
+[
+  {"pos":1,"len":2,"kind":"protocol","understanding":"full","info":"ok"},
+  {"pos":3,"len":4,"kind":"content","understanding":"partial","info":"needs \"escape\" &\nnewline"}
+]
