@@ -17,9 +17,8 @@ namespace wmbus {
 
     ELECHOUSE_cc1101.Init();
 
-    for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
-      ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
-                                   TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
+    for (const auto &setting : kTmodeConfig) {
+      ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
     }
 
     uint32_t freq_reg = uint32_t(freq * 65536 / 26);
