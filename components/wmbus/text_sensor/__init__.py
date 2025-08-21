@@ -19,7 +19,8 @@ CONF_SENSORS = 'sensors'
 
 from .. import (
     WMBusComponent,
-    wmbus_ns
+    wmbus_ns,
+    register_driver,
 )
 from ..common import my_key
 
@@ -49,7 +50,7 @@ CONFIG_SCHEMA = cv.Schema(
 
 async def to_code(config):
     if config[CONF_TYPE]:
-        cg.add_platformio_option("build_src_filter", [f"+<**/wmbus/driver_{config[CONF_TYPE].lower()}.cpp>"])
+        register_driver(config[CONF_TYPE])
     if config[CONF_METER_ID]:
         wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
         cg.add(wmbus.register_wmbus_listener(config[CONF_METER_ID], config[CONF_TYPE].lower(), config[CONF_KEY]))
