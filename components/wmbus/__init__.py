@@ -6,6 +6,7 @@ from esphome.components import mqtt
 from esphome.components import wifi
 from esphome.components import ethernet
 from esphome.components.network import IPAddress
+from esphome.core import CORE
 from esphome.const import (
     CONF_ID,
     CONF_MOSI_PIN,
@@ -236,4 +237,4 @@ async def to_code(config):
             filters.append("+<**/wmbus/driver_unknown.cpp>")
         cg.add_platformio_option("build_src_filter", filters)
 
-    cg.add_job(_apply_build_src_filter)
+    CORE.add_job(_apply_build_src_filter)
