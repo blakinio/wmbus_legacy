@@ -52,6 +52,7 @@ wmbus:
 
   led_pin: GPIO0
   led_blink_time: "1s"
+  time_id: time_sntp
 
   clients:
     - name: "wmbusmeters"
@@ -110,6 +111,7 @@ In wmbus platform:
 
 - **frequency** (*Optional*): CC1101 Rx frequency in MHz. Defaults to ``868.950 MHz``.
 - **sync_mode** (*Optional*): If you have problems with MQTT set it to True. Defaults to ``False``.
+- **time_id** (**Required**): ID of time source component from the `time:` section.
 - **mosi_pin** (*Optional*): CC1101 MOSI pin connection. Defaults to ``GPIO13``.
 - **miso_pin** (*Optional*): CC1101 MISO pin connection. Defaults to ``GPIO12``.
 - **clk_pin** (*Optional*): CC1101 CLK pin connection. Defaults to ``GPIO14``.

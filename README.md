@@ -133,6 +133,7 @@ wmbus:
   all_drivers: False
   sync_mode: True
   log_all: True
+  time_id: time_sntp
 
   mqtt:
     broker: 10.0.0.88
@@ -240,6 +241,7 @@ In wmbus platform:
 - **led_blink_time** (*Optional*): How long LED will stay ON. Defaults to ``300 ms``.
 - **frequency** (*Optional*): Rx frequency in MHz. Defaults to ``868.950 MHz``.
 - **sync_mode** (*Optional*): Receive telegram in one loop. Defaults to ``False``.
+- **time_id** (**Required**): ID of time source component from the `time:` section.
 - **log_all** (*Optional*): Show all received telegrams in log. Defaults to ``False``.
 - **all_drivers** (*Optional*): Compile with all drivers. Defaults to ``False``.
 - **clients** (*Optional*):
