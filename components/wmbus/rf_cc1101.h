@@ -78,6 +78,19 @@ typedef struct RxLoopData {
 namespace esphome {
 namespace wmbus {
 
+  class Cc1101Driver {
+    public:
+      bool begin(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs);
+      bool set_frequency(float mhz);
+      bool read_frame(uint8_t *buffer, uint8_t length);
+      bool write_register(uint8_t reg, uint8_t value);
+      uint8_t read_status(uint8_t reg);
+      bool strobe(uint8_t cmd);
+      void set_rx();
+      int8_t get_rssi();
+      uint8_t get_lqi();
+  };
+
   class RxLoop {
     public:
       bool init(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs,
@@ -98,6 +111,8 @@ namespace wmbus {
       WMbusFrame returnFrame;
 
       RxLoopData rxLoop;
+
+      Cc1101Driver cc1101_;
 
       uint32_t sync_time_{0};
       uint8_t  extra_time_{50};
