@@ -230,6 +230,25 @@ text_sensor:
 ```
 
 
+#### 2.1.3. Decryption and troubleshooting
+
+- **Obtaining the AES key:** Many meters ship with a printed 128-bit key on the case or in the accompanying documentation. If the key is not visible, request it from your utility or read it via the meter's optical port.
+- **Logging raw telegrams:** Set `log_all: true` to capture frames for external analysis:
+
+  ```yaml
+  wmbus:
+    log_all: true
+  ```
+
+- **Recognizing decryption failures:** When the key is wrong, the logs will contain warnings such as `failed decryption. Wrong key?` or `(wmbus) WARNING! decrypted payload crc failed check, did you use the correct decryption key?`.
+- **External decoding tools:** Paste raw frames into [wmbusmeters.org](https://wmbusmeters.org/analyze) or use the [wmbusmeters CLI](https://github.com/wmbusmeters/wmbusmeters) to decode payloads.
+- **Troubleshooting missing `total` readings:**
+  - ensure the sensor uses `field: "total"` with the correct unit;
+  - verify the AES key and check for decryption warnings;
+  - with `log_all` enabled, confirm the `total` field is present in the decoded frame;
+  - confirm the driver type matches your meter.
+
+
 Configuration variables:
 ------------------------
 
