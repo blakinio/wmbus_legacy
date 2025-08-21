@@ -124,18 +124,19 @@ vector<DriverInfo*>& allDrivers()
     return *registered_drivers_list_;
 }
 
-void addRegisteredDriver(DriverInfo di)
+bool addRegisteredDriver(DriverInfo di)
 {
     verifyDriverLookupCreated();
     if (registered_drivers_->count(di.name().str()) != 0)
     {
         error("Two drivers trying to register the name \"%s\"", di.name().str().c_str());
-        exit(1);
+        return false;
     }
 
     (*registered_drivers_)[di.name().str()] = di;
     // The list elements points into the map.
     (*registered_drivers_list_).push_back(lookupDriver(di.name().str()));
+    return true;
 }
 
 bool DriverInfo::detect(uint16_t mfct, uchar type, uchar version)
@@ -172,7 +173,11 @@ bool forceRegisterDriver(function<void(DriverInfo&)> setup)
     setup(di);
 
     // Check that the driver name has not been registered before!
-    assert(lookupDriver(di.name().str()) == NULL);
+    if (lookupDriver(di.name().str()) != NULL)
+    {
+        error("Driver name %s already registered", di.name().str().c_str());
+        return false;
+    }
 
     // Check that no other driver also triggers on the same detection values.
     for (auto& d : di.detect())
@@ -189,7 +194,10 @@ bool forceRegisterDriver(function<void(DriverInfo&)> setup)
     }
 
     // Everything looks, good install this driver.
-    addRegisteredDriver(di);
+    if (!addRegisteredDriver(di))
+    {
+        return false;
+    }
 
     // This code is invoked from the static initializers of DriverInfos when starting
     // wmbusmeters. Thus we do not yet know if the user has supplied --debug or similar setting.
@@ -204,7 +212,11 @@ bool registerDriver(function<void(DriverInfo&)> setup)
     setup(di);
 
     // Check that the driver name has not been registered before!
-    assert(lookupDriver(di.name().str()) == NULL);
+    if (lookupDriver(di.name().str()) != NULL)
+    {
+        error("Driver name %s already registered", di.name().str().c_str());
+        return false;
+    }
 
     // Check that no other driver also triggers on the same detection values.
     for (auto& d : di.detect())
@@ -221,7 +233,10 @@ bool registerDriver(function<void(DriverInfo&)> setup)
     }
 
     // Everything looks, good install this driver.
-    addRegisteredDriver(di);
+    if (!addRegisteredDriver(di))
+    {
+        return false;
+    }
 
     // This code is invoked from the static initializers of DriverInfos when starting
     // wmbusmeters. Thus we do not yet know if the user has supplied --debug or similar setting.
