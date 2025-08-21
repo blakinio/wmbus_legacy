@@ -27,8 +27,6 @@ from esphome.const import (
     CONF_RETAIN,
 )
 
-from esphome.const import SOURCE_FILE_EXTENSIONS
-
 CONF_TRANSPORT = "transport"
 
 CONF_GDO0_PIN = "gdo0_pin"
