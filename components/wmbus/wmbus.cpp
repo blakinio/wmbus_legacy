@@ -26,9 +26,10 @@ namespace wmbus {
   }
 
   void WMBusComponent::setup() {
-#ifdef USE_ESP32
-    App.set_loop_task_stack_size(32 * 1024);
-#endif
+    // Ensure sufficient stack for the main loop; configure in YAML using
+    // `esp32:
+    //   core_loop_stack_size: 32768`
+    // when building for ESP32.
     this->high_freq_.start();
     if (this->led_pin_ != nullptr) {
       this->led_pin_->setup();
