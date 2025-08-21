@@ -30,6 +30,11 @@ namespace wmbus {
     // `esp32:
     //   core_loop_stack_size: 32768`
     // when building for ESP32.
+#ifdef USE_ESP32
+    // App.set_loop_task_stack_size() has been removed from ESPHome.
+    // If additional stack space is required, adjust it via ESPHome build
+    // flags or the current API for configuring the main loop stack.
+#endif
     this->high_freq_.start();
     if (this->led_pin_ != nullptr) {
       this->led_pin_->setup();
