@@ -56,6 +56,7 @@ enum RxLoopState : uint8_t {
   WAIT_FOR_SYNC = 1,
   WAIT_FOR_DATA = 2,
   READ_DATA     = 3,
+  TX            = 4,
 };
 
 enum Cc1101LengthMode : uint8_t {
@@ -83,6 +84,7 @@ namespace wmbus {
                 uint8_t gdo0, uint8_t gdo2, float freq, bool syncMode);
       bool task();
       WMbusFrame get_frame();
+      bool transmit(const uint8_t *data, size_t len);
 
     private:
       bool start(bool force = true);
