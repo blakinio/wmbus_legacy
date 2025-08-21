@@ -33,6 +33,9 @@ https://github.com/SzczepanLeon/esphome-components/blob/main/docs/wmbus.md
 #### 2.1.1. Example
 
 ```yaml
+esp32:
+  core_loop_stack_size: 32768
+
 time:
   - platform: sntp
     id: time_sntp

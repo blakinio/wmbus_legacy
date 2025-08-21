@@ -26,6 +26,10 @@ namespace wmbus {
   }
 
   void WMBusComponent::setup() {
+    // Ensure sufficient stack for the main loop; configure in YAML using
+    // `esp32:
+    //   core_loop_stack_size: 32768`
+    // when building for ESP32.
 #ifdef USE_ESP32
     // App.set_loop_task_stack_size() has been removed from ESPHome.
     // If additional stack space is required, adjust it via ESPHome build

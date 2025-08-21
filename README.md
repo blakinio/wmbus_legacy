@@ -109,6 +109,9 @@ sensor:
 #### 2.1.2. Example
 
 ```yaml
+esp32:
+  core_loop_stack_size: 32768
+
 time:
   - platform: sntp
     id: time_sntp
