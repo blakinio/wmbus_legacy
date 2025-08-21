@@ -178,13 +178,13 @@ PHY_REGISTER_SCHEMA = cv.Schema(
 RMII_SCHEMA = BASE_SCHEMA.extend(
     cv.Schema(
         {
-            cv.Required(CONF_MDC_PIN): pins.gpio_output_pin_number(allow_internal=True),
-            cv.Required(CONF_MDIO_PIN): pins.gpio_output_pin_number(allow_internal=True),
+            cv.Required(CONF_MDC_PIN): pins.internal_gpio_output_pin_number,
+            cv.Required(CONF_MDIO_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_CLK_MODE, default="GPIO0_IN"): cv.enum(
                 CLK_MODES, upper=True, space="_"
             ),
             cv.Optional(CONF_PHY_ADDR, default=0): cv.int_range(min=0, max=31),
-            cv.Optional(CONF_POWER_PIN): pins.gpio_output_pin_number(allow_internal=True),
+            cv.Optional(CONF_POWER_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_PHY_REGISTERS): cv.ensure_list(PHY_REGISTER_SCHEMA),
         }
     )
@@ -193,12 +193,12 @@ RMII_SCHEMA = BASE_SCHEMA.extend(
 SPI_SCHEMA = BASE_SCHEMA.extend(
     cv.Schema(
         {
-            cv.Required(CONF_CLK_PIN): pins.gpio_output_pin_number(allow_internal=True),
-            cv.Required(CONF_MISO_PIN): pins.gpio_input_pin_number(allow_internal=True),
-            cv.Required(CONF_MOSI_PIN): pins.gpio_output_pin_number(allow_internal=True),
-            cv.Required(CONF_CS_PIN): pins.gpio_output_pin_number(allow_internal=True),
-            cv.Optional(CONF_INTERRUPT_PIN): pins.gpio_input_pin_number(allow_internal=True),
-            cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_number(allow_internal=True),
+            cv.Required(CONF_CLK_PIN): pins.internal_gpio_output_pin_number,
+            cv.Required(CONF_MISO_PIN): pins.internal_gpio_input_pin_number,
+            cv.Required(CONF_MOSI_PIN): pins.internal_gpio_output_pin_number,
+            cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_number,
+            cv.Optional(CONF_INTERRUPT_PIN): pins.internal_gpio_input_pin_number,
+            cv.Optional(CONF_RESET_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_CLOCK_SPEED, default="26.67MHz"): cv.All(
                 cv.frequency, cv.int_range(int(8e6), int(80e6))
             ),
