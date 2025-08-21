@@ -22,3 +22,13 @@ wmbus:
   all_drivers: False
   sync_mode: True
   log_all: True
+
+sensor:
+  - platform: wmbus
+    meter_id: 0x04913581
+    type: apatorna1
+    key: "00112233445566778899AABBCCDDEEFF"
+    sensors:
+      - name: "apatorna1 water"
+        field: "total"
+        unit_of_measurement: "m³"

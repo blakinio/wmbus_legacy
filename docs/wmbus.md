@@ -74,17 +74,22 @@ device=rtlwmbus:CMD(mosquitto_sub -h broker.local -t someprefix/+/wmbus/raw)
 
 Add meters:
 ```yaml
-meters:  
-  - |-  
-    name=water_from_izar  
-    driver=izar  
-    id=123456  
-    key=  
-  - |-  
-    name=water_from_apator  
-    driver=apator162  
-    id=9876543  
+meters:
+  - |-
+    name=water_from_izar
+    driver=izar
+    id=123456
+    key=
+  - |-
+    name=water_from_apator
+    driver=apator162
+    id=9876543
     key=00000000000000000000000000000000
+  - |-
+    name=water_from_apatorna1
+    driver=apatorna1
+    id=04913581
+    key=00112233445566778899AABBCCDDEEFF
 ```
 
 Add MQTT configuration:
