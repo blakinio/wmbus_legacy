@@ -30,10 +30,57 @@
 #include<time.h>
 #include "dvparser.h"
 #include "types.h"
+#include<cstdio>
 
 
  std::map<string, DriverInfo>* registered_drivers_ = NULL;
 vector<DriverInfo*>* registered_drivers_list_ = NULL;
+
+static string json_escape(const string& input)
+{
+    string output;
+    output.reserve(input.size());
+    for (char c : input)
+    {
+        switch (c)
+        {
+            case '"':
+                output += "\\\"";
+                break;
+            case '\\':
+                output += "\\\\";
+                break;
+            case '\b':
+                output += "\\b";
+                break;
+            case '\f':
+                output += "\\f";
+                break;
+            case '\n':
+                output += "\\n";
+                break;
+            case '\r':
+                output += "\\r";
+                break;
+            case '\t':
+                output += "\\t";
+                break;
+            default:
+                if ((unsigned char)c < 0x20)
+                {
+                    char buf[7];
+                    snprintf(buf, sizeof(buf), "\\u%04x", c & 0xff);
+                    output += buf;
+                }
+                else
+                {
+                    output += c;
+                }
+                break;
+        }
+    }
+    return output;
+}
 
 void verifyDriverLookupCreated()
 {
@@ -1488,9 +1535,9 @@ string FieldInfo::renderJson(Meter* m, DVEntry* dve)
         }
         else
         {
-            // Normally the string values are quoted in json. TODO quote the value properly.
+            // Normally the string values are quoted in json.
             // A well crafted meter could send a version string with " and break the json format.
-            s += "\"" + field_name + "\":\"" + v + "\"";
+            s += "\"" + field_name + "\":\"" + json_escape(v) + "\"";
         }
     }
     else
