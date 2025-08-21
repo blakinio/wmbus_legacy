@@ -45,6 +45,7 @@ CONF_WMBUS_MQTT_RAW_FORMAT = "mqtt_raw_format"
 CONF_CLIENTS = 'clients'
 CONF_ETH_REF = "wmbus_eth_id"
 CONF_WIFI_REF = "wmbus_wifi_id"
+CONF_ENABLE_TX = "enable_tx"
 
 CODEOWNERS = ["@SzczepanLeon"]
 
@@ -154,6 +155,7 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(CONF_WMBUS_MQTT_RAW_PREFIX, default=""): cv.string,
         cv.Optional(CONF_WMBUS_MQTT_RAW_FORMAT, default="JSON"): cv.templatable(validate_raw_format),
         cv.Optional(CONF_WMBUS_MQTT_RAW_PARSED, default=True): cv.boolean,
+        cv.Optional(CONF_ENABLE_TX,      default=False):   cv.boolean,
     }),
     validate_mqtt,
 )
@@ -211,6 +213,7 @@ async def to_code(config):
     cg.add(var.set_mqtt_raw_parsed(config[CONF_WMBUS_MQTT_RAW_PARSED]))
 
     cg.add(var.set_log_all(config[CONF_LOG_ALL]))
+    cg.add(var.set_enable_tx(config[CONF_ENABLE_TX]))
 
     for conf in config.get(CONF_CLIENTS, []):
         cg.add(var.add_client(conf[CONF_NAME],

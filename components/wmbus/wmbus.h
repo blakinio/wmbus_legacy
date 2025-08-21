@@ -157,6 +157,7 @@ namespace wmbus {
       void set_mqtt_raw_parsed(bool parsed) { this->mqtt_raw_parsed = parsed; }
       void set_mqtt_raw_format(RawFormat format) { this->mqtt_raw_format = format; }
       void set_log_all(bool log_all) { this->log_all_ = log_all; }
+      void set_enable_tx(bool enable_tx) { this->enable_tx_ = enable_tx; }
       void add_client(const std::string name,
                       const network::IPAddress ip,
                       const uint16_t port,
@@ -190,6 +191,7 @@ namespace wmbus {
       uint32_t led_on_millis_{0};
       bool led_on_{false};
       bool log_all_{false};
+      bool enable_tx_{false};
       RxLoop rf_mbus_;
 #ifdef USE_ETHERNET
       ethernet::EthernetComponent *net_component_{nullptr};
