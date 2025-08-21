@@ -49,6 +49,7 @@ Driver::Driver(MeterInfo &mi, DriverInfo &di)
   addNumericField("total", Quantity::Volume, DEFAULT_PRINT_PROPERTIES,
                   "The total water consumption recorded by this meter.");
 }
+
 void Driver::processContent(Telegram *t) {
   // Unfortunately, the at-wmbus-16-2 is mostly a proprietary protocol
   // simply wrapped inside a wmbus telegram.
@@ -308,9 +309,13 @@ int Driver::registerSize(int c) {
 
 void Driver::processExtras(string miExtras) {
   map<string, string> extras;
-  bool ok = parseExtras(miExtras, &extras);
-  if (!ok) {
+  if (!parseExtras(miExtras, &extras)) {
     error("(apator162) invalid extra parameters (%s)\n", miExtras.c_str());
+    return;
+  }
+  if (!extras.empty()) {
+    warning("(apator162) extras are not supported and will be ignored (%s)\n",
+            miExtras.c_str());
   }
 }
 
