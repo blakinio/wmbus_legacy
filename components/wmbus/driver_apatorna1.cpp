@@ -57,8 +57,13 @@ namespace
         vector<uchar> frame(content.begin() + 2, content.begin() + 18);
         vector<uchar>::iterator pos = frame.begin();
 
-        // TODO: read specified key from input
-        vector<uchar> aes_key(16, 0);
+        vector<uchar> aes_key = meterKeys()->confidentiality_key;
+        if (aes_key.size() != 16)
+        {
+            warning("(apatorna1) invalid or missing AES key, expected 16 bytes");
+            t->decryption_failed = true;
+            return;
+        }
 
         int num_encrypted_bytes = 0;
         int num_not_encrypted_at_end = 0;
