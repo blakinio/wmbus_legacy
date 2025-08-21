@@ -99,6 +99,16 @@ WMBUS_MQTT_SCHEMA = cv.Schema({
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(CONF_INFO_COMP_ID):                  cv.declare_id(InfoComponent),
     cv.GenerateID():                                   cv.declare_id(WMBusComponent),
+    cv.OnlyWith(CONF_MQTT_ID, "mqtt"):                 cv.use_id(mqtt.MQTTClientComponent),
+    cv.OnlyWith(CONF_TIME_ID, "time"):                 cv.use_id(time.RealTimeClock),
+    cv.OnlyWith(CONF_WIFI_REF, "wifi"):                cv.use_id(wifi.WiFiComponent),
+    cv.OnlyWith(CONF_ETH_REF, "ethernet"):             cv.use_id(ethernet.EthernetComponent),
+    cv.Optional(CONF_MOSI_PIN,       default=13):      pins.gpio_output_pin_schema(allow_internal=True),
+    cv.Optional(CONF_MISO_PIN,       default=12):      pins.gpio_input_pin_schema(allow_internal=True),
+    cv.Optional(CONF_CLK_PIN,        default=14):      pins.gpio_output_pin_schema(allow_internal=True),
+    cv.Optional(CONF_CS_PIN,         default=2):       pins.gpio_output_pin_schema(allow_internal=True),
+    cv.Optional(CONF_GDO0_PIN,       default=5):       pins.gpio_input_pin_schema(allow_internal=True),
+    cv.Optional(CONF_GDO2_PIN,       default=4):       pins.gpio_input_pin_schema(allow_internal=True),
     cv.Optional(CONF_MQTT_ID):               cv.All(
         cv.requires_component("mqtt"),
         cv.use_id(mqtt.MQTTClientComponent),
