@@ -174,6 +174,8 @@ namespace wmbus {
       void send_mqtt_raw(Telegram &t, WMbusFrame &mbus_data);
       void led_blink();
       void led_handler();
+      bool parse_telegram(WMbusFrame &mbus_data, Telegram &t, std::string &telegram);
+      void process_meter(Telegram &t, WMbusFrame &mbus_data, const std::string &telegram);
       HighFrequencyLoopRequester high_freq_;
       GPIOPin *led_pin_{nullptr};
       Cc1101 spi_conf_{};
