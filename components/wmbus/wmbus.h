@@ -29,8 +29,7 @@
 
 #include "utils.h"
 
-#include <WiFiClient.h>
-#include <WiFiUdp.h>
+#include <WiFi.h>
 
 
 namespace esphome {
