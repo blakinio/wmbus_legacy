@@ -202,7 +202,7 @@ namespace wmbus {
 #endif
       bool mqtt_raw{false};
       bool mqtt_raw_parsed{true};
-      bool mqtt_raw_format{RAW_FORMAT_JSON};
+      RawFormat mqtt_raw_format{RAW_FORMAT_JSON};
       std::string mqtt_raw_prefix{""};
       time_t frame_timestamp_;
   };
