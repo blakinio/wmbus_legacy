@@ -13,10 +13,6 @@
 #include "esphome/components/captive_portal/captive_portal.h"
 #endif
 
-#ifdef USE_ESP32
-SET_LOOP_TASK_STACK_SIZE(32 * 1024);
-#pragma message ( "Loop task stack increased." )
-#endif
 #ifdef USE_ESP8266
 #error "ESP8266 not supported. Please use version 3.x: https://github.com/SzczepanLeon/esphome-components/issues/131"
 #endif
@@ -31,6 +27,9 @@ namespace wmbus {
   }
 
   void WMBusComponent::setup() {
+#ifdef USE_ESP32
+    App.set_loop_task_stack_size(32 * 1024);
+#endif
     this->high_freq_.start();
     if (this->led_pin_ != nullptr) {
       this->led_pin_->setup();
