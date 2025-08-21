@@ -107,6 +107,60 @@ text_sensor:
     name: "Text debug for Apator 16-2"
 ```
 
+#### 2.1.2 Zaawansowana konfiguracja CC1101
+
+W bardziej złożonych instalacjach wymagane są dodatkowe ustawienia modułu
+CC1101. Poniższa sekcja opisuje wielomodułowość, tryb nadawania, obsługę
+kanałów oraz diagnostykę jakości sygnału (RSSI/LQI).
+
+- **Wielomodułowość** – lista `cc1101_modules` umożliwia zdefiniowanie kilku
+  modułów CC1101 z własnymi pinami i częstotliwościami.
+- **Transmisja (TX)** – opcja `enable_tx` włącza nadawanie ramek przez moduł.
+- **Ustawienia kanałów** – parametr `channels` pozwala przypisać częstotliwości
+  do konkretnych modułów.
+- **Diagnostyka** – czujniki `rssi` i `lqi` dodane w sekcji `sensor:` pomagają w
+  monitorowaniu jakości łącza.
+
+Przykład konfiguracji:
+
+```yaml
+wmbus:
+  enable_tx: true
+  cc1101_modules:
+    - id: main_433
+      frequency: 433.92
+      cs_pin: GPIO18
+      gdo0_pin: GPIO16
+      gdo2_pin: GPIO17
+    - id: backup_868
+      frequency: 868.95
+      cs_pin: GPIO27
+      gdo0_pin: GPIO25
+      gdo2_pin: GPIO26
+  channels:
+    - number: 0
+      module: main_433
+      frequency: 433.92
+    - number: 1
+      module: backup_868
+      frequency: 868.95
+
+sensor:
+  - platform: wmbus
+    rssi:
+      name: "RSSI"
+    lqi:
+      name: "LQI"
+```
+
+Tabela opcji:
+
+| Opcja | Zakres częstotliwości | Wymagane piny |
+|-------|----------------------|---------------|
+| `frequency` / `channels.frequency` | 300–348 MHz, 387–464 MHz, 779–928 MHz | – |
+| `enable_tx` | 300–928 MHz | `mosi_pin`, `miso_pin`, `clk_pin`, `cs_pin`, `gdo0_pin`, `gdo2_pin` |
+| `cc1101_modules` | zależne od modułu | `mosi_pin`, `miso_pin`, `clk_pin`, `cs_pin`, `gdo0_pin`, `gdo2_pin` |
+
 
 Configuration variables:
 ------------------------
@@ -126,6 +180,8 @@ In wmbus platform:
 - **led_pin** (*Optional*): Pin where LED is connected. It will blink on each telegram. You can use all options from [Pin Schema](https://esphome.io/guides/configuration-types.html#config-pin-schema).
 - **led_blink_time** (*Optional*): How long LED will stay ON. Defaults to ``300 ms``.
 - **log_unknown** (*Optional*): Show telegrams from not configured meters in log. Defaults to ``True``.
+- **enable_tx** (*Optional*): Enable CC1101 transmission. Defaults to ``False``.
+- **cc1101_modules** (*Optional*): List of additional CC1101 modules. See [Zaawansowana konfiguracja CC1101](#21-2-zaawansowana-konfiguracja-cc1101).
 - **clients** (*Optional*):
   - **name** (**Required**): The name for this client.
   - **ip_address** (**Required**): IP address.
