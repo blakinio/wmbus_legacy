@@ -2460,10 +2460,13 @@ bool extractDVdate( std::map<string, pair<int, DVEntry>>* dv_entries,
     return p.second.extractDate(out);
 }
 
-bool DVEntry::extractDate(struct tm* out)
+bool DVEntry::extractDate(struct tm* out,
+    int* week_number,
+    int* dst_offset_minutes,
+    bool* leap_year)
 {
     memset(out, 0, sizeof(*out));
-    out->tm_isdst = -1; // Figure out the dst automatically!
+    out->tm_isdst = -1; // Figure out the dst automatically unless flags say otherwise.
 
     vector<uchar> v;
     hex2bin(value, &v);
@@ -2482,10 +2485,33 @@ bool DVEntry::extractDate(struct tm* out)
         // ..ss ssss
         int sec = (0x3f) & v[0];
         out->tm_sec = sec;
-        // There are also bits for day of week, week of year.
-        // A bit for if daylight saving is in use or not and its offset.
-        // A bit if it is a leap year.
-        // I am unsure how to deal with this here..... TODO
+
+        // Remaining bits carry extra calendar information.
+        // Assumptions based on EN13757-3:
+        //  - hour byte bits 5-7 encode day of week (0=Sunday).
+        //  - last byte holds week number (1-53) in its lower 6 bits.
+        //  - seconds byte bits 6-7 encode DST offset (00=0,01=+60min,10=-60min).
+        //  - minute byte bit 6 marks leap years.
+        int dow = (v[2] >> 5) & 0x07;
+        out->tm_wday = dow;
+
+        if (week_number) *week_number = v.size() > 5 ? (v[5] & 0x3f) : 0;
+
+        int dst_code = (v[0] >> 6) & 0x03;
+        if (dst_offset_minutes) {
+            int offset = 0;
+            switch (dst_code) {
+            case 1: offset = 60; break;
+            case 2: offset = -60; break;
+            default: offset = 0; break;
+            }
+            *dst_offset_minutes = offset;
+        }
+        if (dst_code == 1) out->tm_isdst = 1;
+        else out->tm_isdst = 0;
+
+        bool leap = ((v[1] >> 6) & 0x01) != 0;
+        if (leap_year) *leap_year = leap;
     }
 
     return ok;
