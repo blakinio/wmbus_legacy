@@ -11,6 +11,9 @@ namespace wmbus {
     for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
       ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
                                    TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
+
+    for (const auto &setting : kTmodeConfig) {
+      ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
     }
     return true;
   }
@@ -188,6 +191,10 @@ namespace wmbus {
             max_wait_time_    += extra_time_;
           }
           break;
+
+        case TX:
+          // Transmission handled synchronously in transmit(), nothing to do here
+          break;
       }
 
       uint8_t overfl = cc1101_.read_status(CC1101_RXBYTES) & 0x80;
@@ -220,6 +227,41 @@ namespace wmbus {
 
   WMbusFrame RxLoop::get_frame() {
     return this->returnFrame;
+  }
+
+  bool RxLoop::transmit(const uint8_t *data, size_t len) {
+    if ((data == nullptr) || (len == 0)) {
+      return false;
+    }
+
+    rxLoop.state = TX;
+
+    // Switch to IDLE and flush FIFOs
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_SIDLE);
+    while (ELECHOUSE_cc1101.SpiReadStatus(CC1101_MARCSTATE) != MARCSTATE_IDLE)
+      ;
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_SFRX);
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_SFTX);
+
+    // Load data into TX FIFO
+    ELECHOUSE_cc1101.SpiWriteBurstReg(CC1101_TXFIFO, const_cast<uint8_t *>(data), len);
+
+    // Start transmission
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_STX);
+    // Wait for transmission to start
+    while (ELECHOUSE_cc1101.SpiReadStatus(CC1101_MARCSTATE) != MARCSTATE_TX)
+      ;
+    // Wait for transmission to end
+    while (ELECHOUSE_cc1101.SpiReadStatus(CC1101_MARCSTATE) == MARCSTATE_TX)
+      ;
+
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_SFTX);
+
+    // Restart receiver after transmission
+    rxLoop.state = INIT_RX;
+    start();
+
+    return true;
   }
 
   bool RxLoop::start(bool force) {

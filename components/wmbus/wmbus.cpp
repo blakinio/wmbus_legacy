@@ -41,13 +41,16 @@ namespace wmbus {
       this->led_pin_->digital_write(false);
       this->led_on_ = false;
     }
-    if (!rf_mbus_.init(this->spi_conf_.mosi->get_pin(), this->spi_conf_.miso->get_pin(),
-                       this->spi_conf_.clk->get_pin(),  this->spi_conf_.cs->get_pin(),
-                       this->spi_conf_.gdo0->get_pin(), this->spi_conf_.gdo2->get_pin(),
-                       this->frequency_, this->sync_mode_)) {
-      this->mark_failed();
-      ESP_LOGE(TAG, "RF chip initialization failed");
-      return;
+    for (size_t i = 0; i < this->cc1101_modules_.size(); i++) {
+      auto &conf = this->cc1101_modules_[i];
+      if (!this->rf_mbus_[i].init(conf.mosi->get_pin(), conf.miso->get_pin(),
+                                  conf.clk->get_pin(), conf.cs->get_pin(),
+                                  conf.gdo0->get_pin(), conf.gdo2->get_pin(),
+                                  conf.frequency, conf.sync_mode)) {
+        this->mark_failed();
+        ESP_LOGE(TAG, "RF chip %u initialization failed", (unsigned)i);
+        return;
+      }
     }
 #ifdef USE_WMBUS_MQTT
     this->mqtt_client_.setClient(this->tcp_client_);
@@ -58,21 +61,23 @@ namespace wmbus {
 
   void WMBusComponent::loop() {
     this->led_handler();
-    if (rf_mbus_.task()) {
-      ESP_LOGVV(TAG, "Have data from RF ...");
-      WMbusFrame mbus_data = rf_mbus_.get_frame();
+    for (auto &rf : this->rf_mbus_) {
+      if (rf.task()) {
+        ESP_LOGVV(TAG, "Have data from RF ...");
+        WMbusFrame mbus_data = rf.get_frame();
 
-      Telegram t;
-      std::string telegram;
-      bool should_process = this->parse_telegram(mbus_data, t, telegram);
-      if (should_process) {
-        this->process_meter(t, mbus_data, telegram);
-      }
+        Telegram t;
+        std::string telegram;
+        bool should_process = this->parse_telegram(mbus_data, t, telegram);
+        if (should_process) {
+          this->process_meter(t, mbus_data, telegram);
+        }
 # if defined(USE_WMBUS_MQTT) || defined(USE_MQTT)
-      if (this->mqtt_raw) {
-        send_mqtt_raw(t, mbus_data);
-      }
+        if (this->mqtt_raw) {
+          send_mqtt_raw(t, mbus_data);
+        }
 #endif
+      }
     }
   }
 
@@ -445,17 +450,20 @@ namespace wmbus {
 #ifdef USE_ESP32
     ESP_LOGCONFIG(TAG, "  Chip ID: %012llX", ESP.getEfuseMac());
 #endif
-    ESP_LOGCONFIG(TAG, "  CC1101 frequency: %3.3f MHz", this->frequency_);
-    ESP_LOGCONFIG(TAG, "  CC1101 SPI bus:");
-    if (this->is_failed()) {
-      ESP_LOGE(TAG, "   Check connection to CC1101!");
+    for (size_t i = 0; i < this->cc1101_modules_.size(); i++) {
+      auto &conf = this->cc1101_modules_[i];
+      ESP_LOGCONFIG(TAG, "  CC1101[%u] frequency: %3.3f MHz", (unsigned) i, conf.frequency);
+      ESP_LOGCONFIG(TAG, "  CC1101[%u] SPI bus:", (unsigned) i);
+      if (this->is_failed()) {
+        ESP_LOGE(TAG, "   Check connection to CC1101[%u]!", (unsigned) i);
+      }
+      LOG_PIN("    MOSI Pin: ", conf.mosi);
+      LOG_PIN("    MISO Pin: ", conf.miso);
+      LOG_PIN("    CLK Pin:  ", conf.clk);
+      LOG_PIN("    CS Pin:   ", conf.cs);
+      LOG_PIN("    GDO0 Pin: ", conf.gdo0);
+      LOG_PIN("    GDO2 Pin: ", conf.gdo2);
     }
-    LOG_PIN("    MOSI Pin: ", this->spi_conf_.mosi);
-    LOG_PIN("    MISO Pin: ", this->spi_conf_.miso);
-    LOG_PIN("    CLK Pin:  ", this->spi_conf_.clk);
-    LOG_PIN("    CS Pin:   ", this->spi_conf_.cs);
-    LOG_PIN("    GDO0 Pin: ", this->spi_conf_.gdo0);
-    LOG_PIN("    GDO2 Pin: ", this->spi_conf_.gdo2);
     std::string drivers = "";
     for (DriverInfo* p : allDrivers()) {
       drivers += p->name().str() + ", ";

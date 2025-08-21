@@ -45,6 +45,8 @@ CONF_WMBUS_MQTT_RAW_FORMAT = "mqtt_raw_format"
 CONF_CLIENTS = 'clients'
 CONF_ETH_REF = "wmbus_eth_id"
 CONF_WIFI_REF = "wmbus_wifi_id"
+CONF_ENABLE_TX = "enable_tx"
+CONF_CC1101_MODULES = "cc1101_modules"
 
 CODEOWNERS = ["@SzczepanLeon"]
 
@@ -106,6 +108,32 @@ WMBUS_MQTT_SCHEMA = cv.Schema({
 })
 
 
+ALLOWED_FREQUENCIES = [315, 433, 868, 915]
+
+
+def validate_cc1101_frequency(value):
+    value = cv.float_(value)
+    if any(abs(value - freq) < 10 for freq in ALLOWED_FREQUENCIES):
+        return value
+    raise cv.Invalid(
+        f"Frequency {value} MHz not supported (allowed: 315/433/868/915 MHz)"
+    )
+
+
+CC1101_MODULE_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_MOSI_PIN): pins.internal_gpio_output_pin_schema,
+        cv.Required(CONF_MISO_PIN): pins.internal_gpio_input_pin_schema,
+        cv.Required(CONF_CLK_PIN): pins.internal_gpio_output_pin_schema,
+        cv.Required(CONF_CS_PIN): pins.internal_gpio_output_pin_schema,
+        cv.Required(CONF_GDO0_PIN): pins.internal_gpio_input_pin_schema,
+        cv.Required(CONF_GDO2_PIN): pins.internal_gpio_input_pin_schema,
+        cv.Required(CONF_FREQUENCY): validate_cc1101_frequency,
+        cv.Optional(CONF_SYNC_MODE, default=False): cv.boolean,
+    }
+)
+
+
 def validate_mqtt(config):
     if config.get(CONF_MQTT_ID) and config.get(CONF_MQTT):
         raise cv.Invalid("Only one MQTT configuration is allowed")
@@ -147,13 +175,15 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(CONF_LOG_ALL,        default=False):   cv.boolean,
         cv.Optional(CONF_ALL_DRIVERS,    default=False):   cv.boolean,
         cv.Optional(CONF_CLIENTS):                         cv.ensure_list(CLIENT_SCHEMA),
-        cv.Optional(CONF_FREQUENCY,      default=868.950): cv.float_range(min=300, max=928),
+        cv.Optional(CONF_FREQUENCY,      default=868.950): validate_cc1101_frequency,
         cv.Optional(CONF_SYNC_MODE,      default=False):   cv.boolean,
+        cv.Optional(CONF_CC1101_MODULES):                  cv.ensure_list(CC1101_MODULE_SCHEMA),
         cv.Optional(CONF_MQTT):                            cv.ensure_schema(WMBUS_MQTT_SCHEMA),
         cv.Optional(CONF_WMBUS_MQTT_RAW, default=False): cv.boolean,
         cv.Optional(CONF_WMBUS_MQTT_RAW_PREFIX, default=""): cv.string,
         cv.Optional(CONF_WMBUS_MQTT_RAW_FORMAT, default="JSON"): cv.templatable(validate_raw_format),
         cv.Optional(CONF_WMBUS_MQTT_RAW_PARSED, default=True): cv.boolean,
+        cv.Optional(CONF_ENABLE_TX,      default=False):   cv.boolean,
     }),
     validate_mqtt,
 )
@@ -170,14 +200,46 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
-    mosi = await cg.gpio_pin_expression(config[CONF_MOSI_PIN])
-    miso = await cg.gpio_pin_expression(config[CONF_MISO_PIN])
-    clk  = await cg.gpio_pin_expression(config[CONF_CLK_PIN])
-    cs   = await cg.gpio_pin_expression(config[CONF_CS_PIN])
-    gdo0 = await cg.gpio_pin_expression(config[CONF_GDO0_PIN])
-    gdo2 = await cg.gpio_pin_expression(config[CONF_GDO2_PIN])
+    if config.get(CONF_CC1101_MODULES):
+        for mod in config[CONF_CC1101_MODULES]:
+            mosi = await cg.gpio_pin_expression(mod[CONF_MOSI_PIN])
+            miso = await cg.gpio_pin_expression(mod[CONF_MISO_PIN])
+            clk = await cg.gpio_pin_expression(mod[CONF_CLK_PIN])
+            cs = await cg.gpio_pin_expression(mod[CONF_CS_PIN])
+            gdo0 = await cg.gpio_pin_expression(mod[CONF_GDO0_PIN])
+            gdo2 = await cg.gpio_pin_expression(mod[CONF_GDO2_PIN])
+            cg.add(
+                var.add_cc1101(
+                    mosi,
+                    miso,
+                    clk,
+                    cs,
+                    gdo0,
+                    gdo2,
+                    mod[CONF_FREQUENCY],
+                    mod[CONF_SYNC_MODE],
+                )
+            )
+    else:
+        mosi = await cg.gpio_pin_expression(config[CONF_MOSI_PIN])
+        miso = await cg.gpio_pin_expression(config[CONF_MISO_PIN])
+        clk = await cg.gpio_pin_expression(config[CONF_CLK_PIN])
+        cs = await cg.gpio_pin_expression(config[CONF_CS_PIN])
+        gdo0 = await cg.gpio_pin_expression(config[CONF_GDO0_PIN])
+        gdo2 = await cg.gpio_pin_expression(config[CONF_GDO2_PIN])
 
-    cg.add(var.add_cc1101(mosi, miso, clk, cs, gdo0, gdo2, config[CONF_FREQUENCY], config[CONF_SYNC_MODE]))
+        cg.add(
+            var.add_cc1101(
+                mosi,
+                miso,
+                clk,
+                cs,
+                gdo0,
+                gdo2,
+                config[CONF_FREQUENCY],
+                config[CONF_SYNC_MODE],
+            )
+        )
 
     time = await cg.get_variable(config[CONF_TIME_ID])
     cg.add(var.set_time(time))
@@ -211,6 +273,7 @@ async def to_code(config):
     cg.add(var.set_mqtt_raw_parsed(config[CONF_WMBUS_MQTT_RAW_PARSED]))
 
     cg.add(var.set_log_all(config[CONF_LOG_ALL]))
+    cg.add(var.set_enable_tx(config[CONF_ENABLE_TX]))
 
     for conf in config.get(CONF_CLIENTS, []):
         cg.add(var.add_client(conf[CONF_NAME],
