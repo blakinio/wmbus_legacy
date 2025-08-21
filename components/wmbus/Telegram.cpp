@@ -2438,7 +2438,60 @@ string renderAnalysisAsText(vector<Explanation>& explanations, OutputFormat of)
 
 string renderAnalysisAsJson(vector<Explanation>& explanations)
 {
-    return "{ \"TODO\": true }\n";
+    auto json_escape = [](const std::string& in) {
+        std::string out;
+        out.reserve(in.size());
+        for (unsigned char c : in)
+        {
+            switch (c)
+            {
+                case '\"': out += "\\\""; break;
+                case '\\': out += "\\\\"; break;
+                case '\b': out += "\\b"; break;
+                case '\f': out += "\\f"; break;
+                case '\n': out += "\\n"; break;
+                case '\r': out += "\\r"; break;
+                case '\t': out += "\\t"; break;
+                default:
+                    if (c < 0x20)
+                    {
+                        out += tostrprintf("\\u%04x", c);
+                    }
+                    else
+                    {
+                        out += c;
+                    }
+            }
+        }
+        return out;
+    };
+
+    std::string s = "[\n";
+    bool first = true;
+    for (auto& e : explanations)
+    {
+        if (!first) s += ",\n";
+        first = false;
+
+        const char* kind = e.kind == KindOfData::PROTOCOL ? "protocol" : "content";
+        const char* understanding = "none";
+        switch (e.understanding)
+        {
+            case Understanding::NONE: understanding = "none"; break;
+            case Understanding::ENCRYPTED: understanding = "encrypted"; break;
+            case Understanding::COMPRESSED: understanding = "compressed"; break;
+            case Understanding::PARTIAL: understanding = "partial"; break;
+            case Understanding::FULL: understanding = "full"; break;
+        }
+
+        s += "  {";
+        s += tostrprintf("\"pos\":%d,\"len\":%d,\"kind\":\"%s\",\"understanding\":\"%s\",\"info\":\"%s\"",
+                          e.pos, e.len, kind, understanding, json_escape(e.info).c_str());
+        s += "}";
+    }
+    if (!first) s += "\n";
+    s += "]\n";
+    return s;
 }
 
 string Telegram::analyzeParse(OutputFormat format, int* content_length, int* understood_content_length)
