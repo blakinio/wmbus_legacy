@@ -22,6 +22,7 @@
 #include <map>
 #include <utility>
 #include <string>
+#include <vector>
 
 #include "rf_cc1101.h"
 #include "m_bus_data.h"
@@ -95,6 +96,8 @@ namespace wmbus {
     InternalGPIOPin *cs{nullptr};
     InternalGPIOPin *gdo0{nullptr};
     InternalGPIOPin *gdo2{nullptr};
+    double frequency{0};
+    bool sync_mode{false};
   };
 
   class InfoComponent : public Component {
@@ -116,14 +119,9 @@ namespace wmbus {
                       InternalGPIOPin *clk, InternalGPIOPin *cs,
                       InternalGPIOPin *gdo0, InternalGPIOPin *gdo2,
                       double frequency, bool sync_mode) {
-        this->spi_conf_.mosi = mosi;
-        this->spi_conf_.miso = miso;
-        this->spi_conf_.clk  = clk;
-        this->spi_conf_.cs   = cs;
-        this->spi_conf_.gdo0 = gdo0;
-        this->spi_conf_.gdo2 = gdo2;
-        this->frequency_ = frequency;
-        this->sync_mode_ = sync_mode;
+        this->cc1101_modules_.push_back(
+          {mosi, miso, clk, cs, gdo0, gdo2, frequency, sync_mode});
+        this->rf_mbus_.emplace_back();
       }
       void add_sensor(uint32_t meter_id, std::string field, std::string unit, sensor::Sensor *sensor) {
         if (this->wmbus_listeners_.count(meter_id) != 0) {
@@ -179,9 +177,8 @@ namespace wmbus {
       void process_meter(Telegram &t, WMbusFrame &mbus_data, const std::string &telegram);
       HighFrequencyLoopRequester high_freq_;
       GPIOPin *led_pin_{nullptr};
-      Cc1101 spi_conf_{};
-      double frequency_{};
-      bool sync_mode_{false};
+      std::vector<Cc1101> cc1101_modules_{};
+      std::vector<RxLoop> rf_mbus_{};
       std::map<uint32_t, WMBusListener *> wmbus_listeners_{};
       std::vector<Client> clients_{};
       WiFiClient tcp_client_;
