@@ -50,6 +50,90 @@ Driver::Driver(MeterInfo &mi, DriverInfo &di)
                   "The total water consumption recorded by this meter.");
 }
 
+        // Anyway, it seems like telegram is broken up into registers.
+        // Each register is identified with a single byte after which the content follows.
+        // For example, the total volume is marked by 0x10 followed by 4 bytes.
+
+        vector<uchar> content;
+        t->extractPayload(&content);
+
+        vector<uchar> aes_key = meterKeys()->confidentiality_key;
+        if (aes_key.size() != 16)
+        {
+            warning("(apator162) invalid or missing AES key, expected 16 bytes");
+            t->decryption_failed = true;
+            return;
+        }
+
+        if (t->decryption_failed)
+        {
+            error("(apator162) failed to decrypt telegram");
+            t->discard = true;
+            return;
+        }
+
+        map<string,pair<int,DVEntry>> vendor_values;
+
+        // The first 8 bytes are error flags and a date time.
+        // E.g. 0F005B5996000000 therefore we skip the first 8 bytes.
+        //
+        // 0F - Spcial function / packet
+        // next 4B : Date - In default frame
+        // next 3B : Faults - In default frame example: please see description of 0x01 register
+
+        size_t i=8;
+        while (i < content.size())
+        {
+            int c = content[i];
+            int size = registerSize(c);
+            if (c == 0xff) break; // An FF signals end of telegram padded to encryption boundary,
+            // FFFFFFF623A where 4 last are perhaps crc or counter?
+            i++;
+            if (size == -1 || i+size > content.size())
+            {
+                vector<uchar> frame;
+                t->extractFrame(&frame);
+                string hex = bin2hex(frame);
+
+                if (t->beingAnalyzed() == false)
+                {
+                    if (size == -1)
+                    {
+                        warning("(apator162) telegram contains a register (%02x) with unknown size.\n"
+                                "Please open an issue at https://github.com/wmbusmeters/wmbusmeters/\n"
+                                "and report this telegram: %s\n", c, hex.c_str());
+                    }
+                    else
+                    {
+                        warning("(apator162) telegram decoding fails since last register (%02x size %d) does not\n"
+                                "align with telegram size %zu > %zu.\n"
+                                "Please open an issue at https://github.com/wmbusmeters/wmbusmeters/\n"
+                                "and report this telegram: %s\n", c, size, i+size, content.size(), hex.c_str());
+                    }
+                }
+                break;
+            }
+            if (c == 0x10 && size == 4 && i+size < content.size())
+            {
+                // We found the register representing the total
+                string total;
+                strprintf(&total, "%02x%02x%02x%02x", content[i+0], content[i+1], content[i+2], content[i+3]);
+                int offset = i-1+t->header_size;
+                vendor_values["0413"] = {offset, DVEntry(offset, DifVifKey("0413"), MeasurementType::Instantaneous, 0x13, {}, {}, 0, 0, 0, total) };
+                double total_water_consumption_m3 {};
+                extractDVdouble(&vendor_values, "0413", &offset, &total_water_consumption_m3);
+                total = "*** 10-"+total+" total consumption (%f m3)";
+                t->addSpecialExplanation(offset, 4, KindOfData::CONTENT, Understanding::FULL, total.c_str(), total_water_consumption_m3);
+
+                setNumericValue("total", Unit::M3, total_water_consumption_m3);
+            }
+            else
+            {
+                string msg = "*** ";
+                msg += bin2hex(content, i-1, 1)+"-"+bin2hex(content, i, size);
+                t->addSpecialExplanation(i-1+t->header_size, size, KindOfData::CONTENT, Understanding::NONE, msg.c_str());
+            }
+            i += size;
 void Driver::processContent(Telegram *t) {
   // Unfortunately, the at-wmbus-16-2 is mostly a proprietary protocol
   // simply wrapped inside a wmbus telegram.
