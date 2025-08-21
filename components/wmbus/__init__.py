@@ -60,6 +60,15 @@ RawFormat = wmbus_ns.enum("RawFormat")
 Transport = wmbus_ns.enum("Transport")
 MqttClient = wmbus_ns.struct('MqttClient')
 
+# Drivers referenced by sensor/text_sensor integrations. We record them here so
+# that ``build_src_filter`` can later re-include only the necessary sources.
+_REGISTERED_DRIVERS: set[str] = set()
+
+
+def register_driver(driver: str) -> None:
+    """Record a driver name for later inclusion in the build filter."""
+    _REGISTERED_DRIVERS.add(driver.lower())
+
 FORMAT = {
     "HEX": Format.FORMAT_HEX,
     "RTLWMBUS": Format.FORMAT_RTLWMBUS,
@@ -213,11 +222,14 @@ async def to_code(config):
     cg.add_library("SPI", None)
     cg.add_library("LSatan/SmartRC-CC1101-Driver-Lib", "2.5.7")
 
-    cg.add_platformio_option("build_src_filter", ["+<*>", "-<.git/>", "-<.svn/>"])
+    def _apply_build_src_filter():
+        filters = ["+<*>", "-<.git/>", "-<.svn/>", "-<**/wmbus/driver_*.cpp>"]
+        if config[CONF_ALL_DRIVERS]:
+            filters.append("+<**/wmbus/driver_*.cpp>")
+        else:
+            for drv in sorted(_REGISTERED_DRIVERS):
+                filters.append(f"+<**/wmbus/driver_{drv}.cpp>")
+            filters.append("+<**/wmbus/driver_unknown.cpp>")
+        cg.add_platformio_option("build_src_filter", filters)
 
-    if config[CONF_ALL_DRIVERS]:
-        cg.add_platformio_option("build_src_filter", ["+<**/wmbus/driver_*.cpp>"])
-    else:
-        cg.add_platformio_option("build_src_filter", ["-<**/wmbus/driver_*.cpp>"])
-
-    cg.add_platformio_option("build_src_filter", ["+<**/wmbus/driver_unknown.cpp>"])
+    cg.add_job(_apply_build_src_filter)
