@@ -46,14 +46,15 @@ external_components:
 
 wmbus:
   frequency: 434.475
+  # Use only non-bootstrapping pins to avoid startup issues.
   mosi_pin: GPIO13
-  miso_pin: GPIO5
-  clk_pin:  GPIO2
-  cs_pin:   GPIO14
-  gdo0_pin: GPIO15
-  gdo2_pin: GPIO16
+  miso_pin: GPIO12
+  clk_pin:  GPIO14
+  cs_pin:   GPIO18
+  gdo0_pin: GPIO16
+  gdo2_pin: GPIO17
 
-  led_pin: GPIO0
+  led_pin: GPIO21
   led_blink_time: "1s"
 
   clients:
@@ -116,9 +117,10 @@ In wmbus platform:
 - **mosi_pin** (*Optional*): CC1101 MOSI pin connection. Defaults to ``GPIO13``.
 - **miso_pin** (*Optional*): CC1101 MISO pin connection. Defaults to ``GPIO12``.
 - **clk_pin** (*Optional*): CC1101 CLK pin connection. Defaults to ``GPIO14``.
-- **cs_pin** (*Optional*): CC1101 CS pin connection. Defaults to ``GPIO2``.
+- **cs_pin** (*Optional*): CC1101 CS pin connection. Defaults to ``GPIO18``.
 - **gdo0_pin** (*Optional*): CC1101 GDO0 pin connection. Defaults to ``GPIO5``.
 - **gdo2_pin** (*Optional*): CC1101 GDO2 pin connection. Defaults to ``GPIO4``.
+- Avoid ESP32 boot strapping pins like ``GPIO2`` and ``GPIO15`` for critical signals or ensure external circuitry holds them in safe states during boot.
 - **led_pin** (*Optional*): Pin where LED is connected. It will blink on each telegram. You can use all options from [Pin Schema](https://esphome.io/guides/configuration-types.html#config-pin-schema).
 - **led_blink_time** (*Optional*): How long LED will stay ON. Defaults to ``300 ms``.
 - **log_unknown** (*Optional*): Show telegrams from not configured meters in log. Defaults to ``True``.
