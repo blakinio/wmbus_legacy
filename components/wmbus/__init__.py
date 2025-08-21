@@ -27,8 +27,6 @@ from esphome.const import (
     CONF_RETAIN,
 )
 
-from esphome.const import SOURCE_FILE_EXTENSIONS
-
 CONF_TRANSPORT = "transport"
 
 CONF_GDO0_PIN = "gdo0_pin"
@@ -111,6 +109,28 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_CS_PIN,         default=2):       pins.gpio_output_pin_schema(allow_internal=True),
     cv.Optional(CONF_GDO0_PIN,       default=5):       pins.gpio_input_pin_schema(allow_internal=True),
     cv.Optional(CONF_GDO2_PIN,       default=4):       pins.gpio_input_pin_schema(allow_internal=True),
+    cv.Optional(CONF_MQTT_ID):               cv.All(
+        cv.requires_component("mqtt"),
+        cv.use_id(mqtt.MQTTClientComponent),
+    ),
+    cv.Optional(CONF_TIME_ID):               cv.All(
+        cv.requires_component("time"),
+        cv.use_id(time.RealTimeClock),
+    ),
+    cv.Optional(CONF_WIFI_REF):              cv.All(
+        cv.requires_component("wifi"),
+        cv.use_id(wifi.WiFiComponent),
+    ),
+    cv.Optional(CONF_ETH_REF):               cv.All(
+        cv.requires_component("ethernet"),
+        cv.use_id(ethernet.EthernetComponent),
+    ),
+    cv.Optional(CONF_MOSI_PIN,       default=13):      pins.internal_gpio_output_pin_schema,
+    cv.Optional(CONF_MISO_PIN,       default=12):      pins.internal_gpio_input_pin_schema,
+    cv.Optional(CONF_CLK_PIN,        default=14):      pins.internal_gpio_output_pin_schema,
+    cv.Optional(CONF_CS_PIN,         default=2):       pins.internal_gpio_output_pin_schema,
+    cv.Optional(CONF_GDO0_PIN,       default=5):       pins.internal_gpio_input_pin_schema,
+    cv.Optional(CONF_GDO2_PIN,       default=4):       pins.internal_gpio_input_pin_schema,
     cv.Optional(CONF_LED_PIN):                         pins.gpio_output_pin_schema,
     cv.Optional(CONF_LED_BLINK_TIME, default="200ms"): cv.positive_time_period,
     cv.Optional(CONF_LOG_ALL,        default=False):   cv.boolean,
