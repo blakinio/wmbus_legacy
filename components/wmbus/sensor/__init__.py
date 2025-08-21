@@ -1,7 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
-from esphome.log import AnsiFore, color
 from esphome.const import (
     CONF_ID,
     CONF_TYPE,
@@ -30,12 +29,23 @@ CODEOWNERS = ["@SzczepanLeon"]
 WMBusListener = wmbus_ns.class_('WMBusListener')
 
 
-SENSOR_SCHEMA = sensor.sensor_schema(
-    #
-).extend(
-    {
-        cv.Optional(CONF_FIELD, default=""): cv.string_strict,
-    }
+def validate_sensor(config):
+    if CONF_UNIT_OF_MEASUREMENT not in config:
+        raise cv.Invalid(
+            f"unit_of_measurement not defined for sensor '{config[CONF_NAME]}'"
+        )
+    return config
+
+
+SENSOR_SCHEMA = cv.All(
+    sensor.sensor_schema(
+        #
+    ).extend(
+        {
+            cv.Optional(CONF_FIELD, default=""): cv.string_strict,
+        }
+    ),
+    validate_sensor,
 )
 
 CONFIG_SCHEMA = cv.Schema(
@@ -56,9 +66,6 @@ async def to_code(config):
         wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
         cg.add(wmbus.register_wmbus_listener(config[CONF_METER_ID], config[CONF_TYPE].lower(), config[CONF_KEY]))
         for s in config.get(CONF_SENSORS, []):
-            if CONF_UNIT_OF_MEASUREMENT not in s:
-                print(color(AnsiFore.RED, f"unit_of_measurement not defined for sensor '{s[CONF_NAME]}'!"))
-                exit()
             if (s[CONF_FIELD]):
                 field = s[CONF_FIELD].lower()
             else:
