@@ -8,9 +8,15 @@ namespace wmbus {
   bool Cc1101Driver::begin(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs) {
     ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
     ELECHOUSE_cc1101.Init();
+    uint8_t cc1101Version = ELECHOUSE_cc1101.SpiReadStatus(CC1101_VERSION);
+    if ((cc1101Version == 0) || (cc1101Version == 0xFF)) {
+      ESP_LOGE(TAG, "CC1101 Init failed, VERSION=0x%02X", cc1101Version);
+      return false;
+    }
     for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
       ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
                                    TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
+    }
 
     for (const auto &setting : kTmodeConfig) {
       ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
