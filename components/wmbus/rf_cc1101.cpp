@@ -1,4 +1,5 @@
 #include "rf_cc1101.h"
+#include <cstring>
 
 namespace esphome {
 namespace wmbus {
@@ -8,10 +9,6 @@ namespace wmbus {
   bool Cc1101Driver::begin(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs) {
     ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
     ELECHOUSE_cc1101.Init();
-    for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
-      ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
-                                   TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
-
     for (const auto &setting : kTmodeConfig) {
       ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
     }
@@ -300,7 +297,9 @@ namespace wmbus {
     this->returnFrame.mode  = 'X';
     this->returnFrame.block = 'X';
 
-    std::fill( std::begin( data_in.data ), std::end( data_in.data ), 0 );
+    // Clear previously used bytes to avoid residual data between receptions
+    // and keep the operation lightweight by only zeroing the expected length.
+    std::memset(data_in.data, 0, data_in.length);
     data_in.length      = 0;
     data_in.lengthField = 0;
     data_in.mode        = 'X';
