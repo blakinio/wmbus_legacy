@@ -1,0 +1,54 @@
+# Example sensors.yaml demonstrating safe GPIO usage for CC1101.
+# NOTE: GPIO2 and GPIO15 are ESP32 boot-strapping pins and must be
+# held at safe logic levels (HIGH for GPIO2, LOW for GPIO15) during
+# boot. Leaving them floating or repurposing them without proper
+# pull resistors can prevent the ESP32 from starting.
+# This configuration intentionally avoids using these pins by mapping
+# CC1101 SPI and control lines to alternative, non-strapping GPIOs.
+
+esphome:
+  name: wmbus_cc1101
+
+esp32:
+  board: esp32dev
+
+external_components:
+  - source: github://SzczepanLeon/esphome-components@version_4
+    refresh: 0d
+    components: [ wmbus ]
+
+time:
+  - platform: sntp
+
+network:
+  enable_ipv6: false
+
+wifi:
+  ssid: "placeholder"
+  password: "placeholder"
+
+wmbus:
+  mosi_pin: GPIO13   # use GPIO13/12/14 for SPI; GPIO2 is avoided
+  miso_pin: GPIO12
+  clk_pin:  GPIO14
+  cs_pin:   GPIO18   # chip select; GPIO15 would prevent boot
+  gdo0_pin: GPIO16   # general purpose output, safe at boot
+  gdo2_pin: GPIO17   # secondary output, also safe
+
+  led_pin: GPIO21    # status LED on a non-strapping pin
+  led_blink_time: "1s"
+
+  frequency: 868.950
+  all_drivers: False
+  sync_mode: True
+  log_all: True
+
+sensor:
+  - platform: wmbus
+    meter_id: 0x04913581
+    type: apatorna1
+    key: "00112233445566778899AABBCCDDEEFF"
+    sensors:
+      - name: "apatorna1 water"
+        field: "total"
+        unit_of_measurement: "m³"
