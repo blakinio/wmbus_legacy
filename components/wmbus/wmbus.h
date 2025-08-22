@@ -177,12 +177,12 @@ namespace wmbus {
     protected:
       const LogString *format_to_string(Format format);
       const LogString *transport_to_string(Transport transport);
-      void send_to_clients(WMbusFrame &mbus_data);
-      void send_mqtt_raw(Telegram &t, WMbusFrame &mbus_data);
+      void send_to_clients(const WMbusFrame &mbus_data);
+      void send_mqtt_raw(Telegram &t, const WMbusFrame &mbus_data);
       void led_blink();
       void led_handler();
-      bool parse_telegram(WMbusFrame &mbus_data, Telegram &t, std::string &telegram);
-      void process_meter(Telegram &t, WMbusFrame &mbus_data, const std::string &telegram);
+      bool parse_telegram(const WMbusFrame &mbus_data, Telegram &t, std::string &telegram);
+      void process_meter(Telegram &t, const WMbusFrame &mbus_data, const std::string &telegram);
       HighFrequencyLoopRequester high_freq_;
       GPIOPin *led_pin_{nullptr};
       std::vector<Cc1101> cc1101_modules_{};

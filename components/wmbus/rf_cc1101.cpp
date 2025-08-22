@@ -222,7 +222,7 @@ namespace wmbus {
     return rxLoop.complete;
   }
 
-  WMbusFrame RxLoop::get_frame() {
+  const WMbusFrame &RxLoop::get_frame() const {
     return this->returnFrame;
   }
 

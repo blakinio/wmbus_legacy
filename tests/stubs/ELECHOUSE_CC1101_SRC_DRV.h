@@ -107,6 +107,7 @@ class ELECHOUSE_CC1101 {
       buffer[i] = rx_fifo[rx_fifo_pos++];
     }
   }
+  void SpiWriteBurstReg(uint8_t, uint8_t *, uint8_t) {}
   void SetRx() { marcstate = 0x0D; }
   int getRssi() { return rssi; }
   int getLqi() { return lqi; }

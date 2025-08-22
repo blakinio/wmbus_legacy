@@ -64,7 +64,7 @@ namespace wmbus {
     for (auto &rf : this->rf_mbus_) {
       if (rf.task()) {
         ESP_LOGVV(TAG, "Have data from RF ...");
-        WMbusFrame mbus_data = rf.get_frame();
+        const WMbusFrame &mbus_data = rf.get_frame();
 
         Telegram t;
         std::string telegram;
@@ -81,7 +81,7 @@ namespace wmbus {
     }
   }
 
-  bool WMBusComponent::parse_telegram(WMbusFrame &mbus_data, Telegram &t, std::string &telegram) {
+  bool WMBusComponent::parse_telegram(const WMbusFrame &mbus_data, Telegram &t, std::string &telegram) {
     telegram = format_hex_pretty(mbus_data.frame);
     telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'), telegram.end());
 
@@ -94,7 +94,7 @@ namespace wmbus {
     return true;
   }
 
-  void WMBusComponent::process_meter(Telegram &t, WMbusFrame &mbus_data, const std::string &telegram) {
+  void WMBusComponent::process_meter(Telegram &t, const WMbusFrame &mbus_data, const std::string &telegram) {
     uint32_t meter_id = (uint32_t) strtoul(t.addresses[0].id.c_str(), nullptr, 16);
     bool meter_in_config = (this->wmbus_listeners_.count(meter_id) == 1) ? true : false;
 
@@ -257,7 +257,7 @@ namespace wmbus {
 
 
 #if defined(USE_WMBUS_MQTT) || defined(USE_MQTT)
-  void WMBusComponent::send_mqtt_raw(Telegram &t, WMbusFrame &mbus_data) {
+  void WMBusComponent::send_mqtt_raw(Telegram &t, const WMbusFrame &mbus_data) {
     bool is_parsed = !t.addresses.empty();
     if (!is_parsed && !this->mqtt_raw_parsed) {
       return;
@@ -323,7 +323,7 @@ namespace wmbus {
   }
 #endif
   
-  void WMBusComponent::send_to_clients(WMbusFrame &mbus_data) {
+  void WMBusComponent::send_to_clients(const WMbusFrame &mbus_data) {
     for (auto & client : this->clients_) {
       switch (client.format) {
         case FORMAT_HEX:
