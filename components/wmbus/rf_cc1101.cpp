@@ -8,10 +8,6 @@ namespace wmbus {
   bool Cc1101Driver::begin(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs) {
     ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
     ELECHOUSE_cc1101.Init();
-    for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
-      ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
-                                   TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
-
     for (const auto &setting : kTmodeConfig) {
       ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
     }
@@ -225,7 +221,7 @@ namespace wmbus {
     return rxLoop.complete;
   }
 
-  WMbusFrame RxLoop::get_frame() {
+  const WMbusFrame &RxLoop::get_frame() const {
     return this->returnFrame;
   }
 
