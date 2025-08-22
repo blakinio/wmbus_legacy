@@ -30,7 +30,15 @@
 
 #include "utils.h"
 
+#if defined(USE_WIFI)
 #include <WiFi.h>
+using network_client_t = WiFiClient;
+using network_udp_t = WiFiUDP;
+#elif defined(USE_ETHERNET)
+#include <Ethernet.h>
+using network_client_t = EthernetClient;
+using network_udp_t = EthernetUDP;
+#endif
 
 
 namespace esphome {
@@ -181,8 +189,10 @@ namespace wmbus {
       std::vector<RxLoop> rf_mbus_{};
       std::map<uint32_t, WMBusListener *> wmbus_listeners_{};
       std::vector<Client> clients_{};
-      WiFiClient tcp_client_;
-      WiFiUDP udp_client_;
+#if defined(USE_WIFI) || defined(USE_ETHERNET)
+      network_client_t tcp_client_;
+      network_udp_t udp_client_;
+#endif
       time::RealTimeClock *time_{nullptr};
       uint32_t led_blink_time_{0};
       uint32_t led_on_millis_{0};
