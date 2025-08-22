@@ -102,11 +102,12 @@ class ELECHOUSE_CC1101 {
     if (addr == CC1101_MARCSTATE) return marcstate;
     return 0;
   }
-  void SpiReadBurstReg(uint8_t, uint8_t *buffer, uint8_t num) {
-    for (uint8_t i = 0; i < num && rx_fifo_pos < rx_fifo_len; ++i) {
-      buffer[i] = rx_fifo[rx_fifo_pos++];
+    void SpiReadBurstReg(uint8_t, uint8_t *buffer, uint8_t num) {
+      for (uint8_t i = 0; i < num && rx_fifo_pos < rx_fifo_len; ++i) {
+        buffer[i] = rx_fifo[rx_fifo_pos++];
+      }
     }
-  }
+    void SpiWriteBurstReg(uint8_t, uint8_t *, uint8_t) {}
   void SetRx() { marcstate = 0x0D; }
   int getRssi() { return rssi; }
   int getLqi() { return lqi; }
