@@ -189,7 +189,6 @@ namespace wmbus {
       bool led_on_{false};
       bool log_all_{false};
       bool enable_tx_{false};
-      RxLoop rf_mbus_;
 #ifdef USE_ETHERNET
       ethernet::EthernetComponent *net_component_{nullptr};
 #elif defined(USE_WIFI)
