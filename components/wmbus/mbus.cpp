@@ -12,7 +12,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
     t_in.length -= 2;
     if (t_in.block == 'A') {
       ESP_LOGD(TAG, "Received C1 A frame");
-      std::vector<unsigned char> frame(t_in.data, t_in.data + t_in.length);
+      std::vector<unsigned char> frame(t_in.data.data(), t_in.data.data() + t_in.length);
       std::string telegram = format_hex_pretty(frame);
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                      telegram.end());
@@ -24,7 +24,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
       }
     } else if (t_in.block == 'B') {
       ESP_LOGD(TAG, "Received C1 B frame");
-      std::vector<unsigned char> frame(t_in.data, t_in.data + t_in.length);
+      std::vector<unsigned char> frame(t_in.data.data(), t_in.data.data() + t_in.length);
       std::string telegram = format_hex_pretty(frame);
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                      telegram.end());
@@ -36,7 +36,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
   } else if (t_in.mode == 'T') {
     if (t_in.block == 'A') {
       ESP_LOGD(TAG, "Received T1 A frame");
-      std::vector<unsigned char> rawFrame(t_in.data, t_in.data + t_in.length);
+      std::vector<unsigned char> rawFrame(t_in.data.data(), t_in.data.data() + t_in.length);
       std::string telegram = format_hex_pretty(rawFrame);
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                      telegram.end());
@@ -50,7 +50,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
       }
 
       if (decode3OutOf6(&t_in, packetSize(t_in.lengthField))) {
-        std::vector<unsigned char> frame(t_in.data, t_in.data + t_in.length);
+        std::vector<unsigned char> frame(t_in.data.data(), t_in.data.data() + t_in.length);
         std::string telegram = format_hex_pretty(frame);
         telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                        telegram.end());
@@ -62,7 +62,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
       }
     } else if (t_in.block == 'B') {
       ESP_LOGD(TAG, "Received T1 B frame");
-      std::vector<unsigned char> rawFrame(t_in.data, t_in.data + t_in.length);
+      std::vector<unsigned char> rawFrame(t_in.data.data(), t_in.data.data() + t_in.length);
       std::string telegram = format_hex_pretty(rawFrame);
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                      telegram.end());
@@ -76,7 +76,7 @@ bool mBusDecode(WMbusData &t_in, WMbusFrame &t_frame) {
       }
 
       if (decode3OutOf6(&t_in, packetSize(t_in.lengthField))) {
-        std::vector<unsigned char> frame(t_in.data, t_in.data + t_in.length);
+        std::vector<unsigned char> frame(t_in.data.data(), t_in.data.data() + t_in.length);
         std::string telegram = format_hex_pretty(frame);
         telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'),
                        telegram.end());
@@ -125,7 +125,7 @@ bool mBusDecodeFormatA(const WMbusData &t_in, WMbusFrame &t_frame) {
 
   // Validate CRC
   ESP_LOGV(TAG, "Validating CRC for Block1");
-  if (!crcValid(t_in.data, (BLOCK1A_SIZE - 2))) {
+  if (!crcValid(t_in.data.data(), (BLOCK1A_SIZE - 2))) {
     return false;
   }
 
@@ -143,13 +143,13 @@ bool mBusDecodeFormatA(const WMbusData &t_in, WMbusFrame &t_frame) {
     return false;
   }
 
-  t_frame.frame.insert(t_frame.frame.begin(), t_in.data,
-                       (t_in.data + (BLOCK1A_SIZE - 2)));
+  t_frame.frame.insert(t_frame.frame.begin(), t_in.data.data(),
+                       (t_in.data.data() + (BLOCK1A_SIZE - 2)));
   // Get all remaining data blocks and concatenate into data array (removing CRC
   // bytes)
   for (uint8_t n{0}; n < numDataBlocks; ++n) {
     const uint8_t *blockStartPtr =
-        (t_in.data + BLOCK1A_SIZE +
+        (t_in.data.data() + BLOCK1A_SIZE +
          (n * 18)); // Pointer to where data starts. Each block is 18 bytes
     uint8_t blockSize =
         (MIN((L - 9 - (n * 16)),
@@ -209,10 +209,10 @@ bool mBusDecodeFormatB(const WMbusData &t_in, WMbusFrame &t_frame) {
   }
 
   blockSize = MIN((L - 1), (BLOCK1B_SIZE + BLOCK2B_SIZE - 2));
-  blockStartPtr = t_in.data;
+  blockStartPtr = t_in.data.data();
   // Validate CRC for Block1 + Block2
   ESP_LOGV(TAG, "Validating CRC for Block1 + Block2");
-  if (!crcValid(t_in.data, blockSize)) {
+  if (!crcValid(t_in.data.data(), blockSize)) {
     return false;
   }
 
@@ -225,7 +225,7 @@ bool mBusDecodeFormatB(const WMbusData &t_in, WMbusFrame &t_frame) {
   const uint8_t L_OFFSET = (BLOCK1B_SIZE + BLOCK2B_SIZE);
   if (L > (L_OFFSET + 2)) {
     blockSize = (L - L_OFFSET - 1);
-    blockStartPtr = (t_in.data + L_OFFSET);
+    blockStartPtr = (t_in.data.data() + L_OFFSET);
     // Validate CRC for Block3
     ESP_LOGV(TAG, "Validating CRC for Block3");
     if (!crcValid(blockStartPtr, blockSize)) {

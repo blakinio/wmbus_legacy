@@ -8,10 +8,6 @@ namespace wmbus {
   bool Cc1101Driver::begin(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs) {
     ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
     ELECHOUSE_cc1101.Init();
-    for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
-      ELECHOUSE_cc1101.SpiWriteReg(TMODE_RF_SETTINGS_BYTES[i << 1],
-                                   TMODE_RF_SETTINGS_BYTES[(i << 1) + 1]);
-
     for (const auto &setting : kTmodeConfig) {
       ELECHOUSE_cc1101.SpiWriteReg(setting.reg, setting.val);
     }
@@ -290,7 +286,7 @@ namespace wmbus {
     rxLoop.length      = 0;              // Total length of bytes to receive packet
     rxLoop.bytesLeft   = 0;              // Bytes left to to be read from the Rx FIFO
     rxLoop.bytesRx     = 0;              // Bytes read from Rx FIFO
-    rxLoop.pByteIndex  = data_in.data;   // Pointer to current position in the byte array
+    rxLoop.pByteIndex  = data_in.data.data();   // Pointer to current position in the byte array
     rxLoop.complete    = false;          // Packet received
     rxLoop.cc1101Mode  = INFINITE;       // Infinite or fixed CC1101 packet mode
 
@@ -300,7 +296,7 @@ namespace wmbus {
     this->returnFrame.mode  = 'X';
     this->returnFrame.block = 'X';
 
-    std::fill( std::begin( data_in.data ), std::end( data_in.data ), 0 );
+    std::fill( data_in.data.begin(), data_in.data.end(), 0 );
     data_in.length      = 0;
     data_in.lengthField = 0;
     data_in.mode        = 'X';

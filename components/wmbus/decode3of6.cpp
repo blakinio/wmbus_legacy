@@ -61,8 +61,8 @@ namespace wmbus {
 
   bool decode3OutOf6(WMbusData *t_data,  uint16_t packetSize) {
     // We can decode "in place"
-    uint8_t *encodedData = t_data->data;
-    uint8_t *decodedData = t_data->data; 
+    uint8_t *encodedData = t_data->data.data();
+    uint8_t *decodedData = t_data->data.data();
 
     uint16_t bytesDecoded{0};
     uint16_t bytesRemaining{packetSize};
@@ -91,7 +91,7 @@ namespace wmbus {
       }
     }
     t_data->length = bytesDecoded;
-    std::fill((std::begin(t_data->data) + t_data->length), std::end(t_data->data), 0);
+    std::fill(t_data->data.begin() + t_data->length, t_data->data.end(), 0);
     ESP_LOGVV(TAG, "Decode 3 out of 6 OK.");
     return true;
   }
