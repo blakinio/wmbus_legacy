@@ -1,0 +1,13 @@
+one_wire:
+  pin: GPIO4
+  id: ow_bus
+
+sensor:
+  - platform: dallas_temp
+    address: 0x1234567890abcdef
+    name: "Temperature 1"
+    one_wire_id: ow_bus
+  - platform: dallas_temp
+    address: 0xfedcba9876543210
+    name: "Temperature 2"
+    one_wire_id: ow_bus
